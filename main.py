@@ -1,0 +1,74 @@
+import github.GithubException
+from github import Github
+from dotenv import load_dotenv
+import os
+import datetime
+from string import Template
+import urllib.request
+import json
+
+load_dotenv()
+GH_TOKEN = os.environ["GH_TOKEN"]
+
+now = datetime.datetime.now()
+new_year = datetime.datetime(now.year, 1, 1)
+
+gh = Github(login_or_token=GH_TOKEN)
+me = gh.get_user()
+
+variables = {
+    "year": str(now.year),
+}
+
+
+def get_github_stats():
+    total_commits = 0
+    for repo in me.get_repos():
+        try:
+            commits = repo.get_commits(author=me, since=new_year).totalCount
+            if commits > 0:
+                total_commits += commits
+                print("{} commits in \"{}\" for {} since {}".format(commits, repo.name, me.login, new_year.year))
+        except github.GithubException as err:
+            print("Error occurred with code \"{}\" and message \"{}\" for repository \"{}\" "
+                  "\n For more info visit {}".format(err.status, err.data["message"], repo.name,
+                                                     err.data["documentation_url"]))
+    return total_commits
+
+
+def get_os_stats():
+    base_url = "https://archlinux.org/packages/search/json/?name={}"
+    linux_zen_arch_package = base_url.format("linux-zen")
+    plasma_desktop_arch_package = base_url.format("plasma-desktop")
+    linux_zen_version = json.loads(
+        (urllib.request.urlopen(urllib.request.Request(linux_zen_arch_package)).read()).decode("utf-8"))["results"][0][
+        "pkgver"]
+    plasma_desktop_version = json.loads(
+        (urllib.request.urlopen(urllib.request.Request(plasma_desktop_arch_package)).read()).decode("utf-8"))[
+        "results"][0]["pkgver"]
+    return plasma_desktop_version, linux_zen_version
+
+
+def update_github_readme(template_vars):
+    with open('readme_template.md', 'r') as template:
+        src = Template(template.read())
+        template_vars["commits"] -= 1
+        content = src.substitute(template_vars)
+        try:
+            profile_repo = me.get_repo(me.login)
+            file = profile_repo.get_contents("README.md")
+            if content != file.decoded_content.decode():
+                profile_repo.update_file(path="README.md",
+                                         message="Automated Update for {} at {}".format(file.name, now.strftime("%c")),
+                                         content=content, sha=file.sha)
+                return "Successfully updated {}".format(file.name)
+            else:
+                return "No update required for {}".format(file.name)
+        except github.GithubException as err:
+            return err
+
+
+if __name__ == "__main__":
+    variables["commits"] = get_github_stats()
+    variables["plasma_desktop_version"], variables["kernel_version"] = get_os_stats()
+    print(update_github_readme(template_vars=variables))
