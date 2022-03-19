@@ -3,7 +3,7 @@ on:
   schedule:
     - cron:  '0 0 * * *' #every day at 00:00 midnight
 jobs:
-  build:
+  update-readme:
     runs-on: ubuntu-latest
     strategy:
       matrix:
