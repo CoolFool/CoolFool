@@ -24,15 +24,20 @@ variables = {
 def get_github_stats():
     total_commits = 0
     for repo in me.get_repos():
-        try:
-            commits = repo.get_commits(author=me, since=new_year).totalCount
-            if commits > 0:
-                total_commits += commits
-                print("{} commits in \"{}\" for {} since {}".format(commits, repo.name, me.login, new_year.year))
-        except github.GithubException as err:
-            print("Error occurred with code \"{}\" and message \"{}\" for repository \"{}\" "
-                  "\n For more info visit {}".format(err.status, err.data["message"], repo.name,
-                                                     err.data["documentation_url"]))
+        if repo.name.lower() == me.login.lower():
+            for i in repo.get_commits(path="README.md"):
+                if "Automated Update for README.md" not in i.commit.message:
+                    total_commits += 1
+        else:
+            try:
+                commits = repo.get_commits(author=me, since=new_year).totalCount
+                if commits > 0:
+                    total_commits += commits
+                    print("{} commits in \"{}\" for {} since {}".format(commits, repo.name, me.login, new_year.year))
+            except github.GithubException as err:
+                print("Error occurred with code \"{}\" and message \"{}\" for repository \"{}\" "
+                      "\n For more info visit {}".format(err.status, err.data["message"], repo.name,
+                                                         err.data["documentation_url"]))
     return total_commits
 
 
@@ -52,7 +57,6 @@ def get_os_stats():
 def update_github_readme(template_vars):
     with open('readme_template.md', 'r') as template:
         src = Template(template.read())
-        template_vars["commits"] -= 1
         content = src.substitute(template_vars)
         try:
             profile_repo = me.get_repo(me.login)
