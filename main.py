@@ -24,20 +24,24 @@ variables = {
 def get_github_stats():
     total_commits = 0
     for repo in me.get_repos():
-        if repo.name.lower() == me.login.lower():
-            for i in repo.get_commits(path="README.md"):
-                if "Automated Update for README.md" not in i.commit.message:
-                    total_commits += 1
+        if repo.private:
+            repo_name = "Private Repository"
         else:
-            try:
+            repo_name = repo.name
+        try:
+            if repo.name.lower() == me.login.lower():
+                for i in repo.get_commits(path="README.md"):
+                    if "Automated Update for README.md" not in i.commit.message:
+                        total_commits += 1
+            else:
                 commits = repo.get_commits(author=me, since=new_year).totalCount
                 if commits > 0:
                     total_commits += commits
-                    print("{} commits in \"{}\" for {} since {}".format(commits, repo.name, me.login, new_year.year))
-            except github.GithubException as err:
-                print("Error occurred with code \"{}\" and message \"{}\" for repository \"{}\" "
-                      "\n For more info visit {}".format(err.status, err.data["message"], repo.name,
-                                                         err.data["documentation_url"]))
+                    print("{} commits in \"{}\" for {} since {}".format(commits, repo_name, me.login, new_year.year))
+        except github.GithubException as err:
+            print("Error occurred with code \"{}\" and message \"{}\" for repository \"{}\" "
+                  "\n For more info visit {}".format(err.status, err.data["message"], repo_name,
+                                                     err.data["documentation_url"]))
     return total_commits
 
 
