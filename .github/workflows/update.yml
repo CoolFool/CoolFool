@@ -8,6 +8,7 @@ on:
 jobs:
   update-readme:
     runs-on: ubuntu-latest
+    if: ${{ !contains(github.event.head_commit.message, 'Automated Update for README.md') }}
     strategy:
       matrix:
         python-version: ['3.10']
