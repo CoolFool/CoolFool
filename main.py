@@ -30,9 +30,12 @@ def get_github_stats():
             repo_name = repo.name
         try:
             if repo.name.lower() == me.login.lower():
-                for i in repo.get_commits(path="README.md"):
+                commits = 0
+                for i in repo.get_commits(author=me, since=new_year):
                     if "Automated Update for README.md" not in i.commit.message:
                         total_commits += 1
+                        commits += 1
+                print("{} commits in \"{}\" for {} since {}".format(commits, repo_name, me.login, new_year.year))
             else:
                 commits = repo.get_commits(author=me, since=new_year).totalCount
                 if commits > 0:
