@@ -33,14 +33,13 @@ def get_github_stats():
                 commits = 0
                 for i in repo.get_commits(author=me, since=new_year):
                     if "Automated Update for README.md" not in i.commit.message:
-                        total_commits += 1
                         commits += 1
                 print("{} commits in \"{}\" for {} since {}".format(commits, repo_name, me.login, new_year.year))
             else:
                 commits = repo.get_commits(author=me, since=new_year).totalCount
                 if commits > 0:
-                    total_commits += commits
                     print("{} commits in \"{}\" for {} since {}".format(commits, repo_name, me.login, new_year.year))
+            total_commits += commits
         except github.GithubException as err:
             print("Error occurred with code \"{}\" and message \"{}\" for repository \"{}\" "
                   "\n For more info visit {}".format(err.status, err.data["message"], repo_name,
@@ -70,7 +69,7 @@ def update_github_readme(template_vars):
             file = profile_repo.get_contents("README.md")
             if content != file.decoded_content.decode():
                 profile_repo.update_file(path="README.md",
-                                         message="Automated Update for {} at {}".format(file.name, now.strftime("%c")),
+                                         message="Automated Update for {} at {} {}".format(file.name, now.strftime("%c"),now.astimezone().tzinfo),
                                          content=content, sha=file.sha)
                 return "Successfully updated {}".format(file.name)
             else:
