@@ -81,4 +81,4 @@ def update_github_readme(template_vars):
 if __name__ == "__main__":
     variables["commits"] = get_github_stats()
     variables["plasma_desktop_version"], variables["kernel_version"] = get_os_stats()
-    print(update_github_readme(template_vars=variables))
+    #print(update_github_readme(template_vars=variables))
