@@ -23,7 +23,11 @@ variables = {
 
 def get_github_stats():
     total_commits = 0
+    total_stargazers = 0
+    # total_forks = 0
     for repo in me.get_repos():
+        total_stargazers += repo.stargazers_count
+        # total_forks += repo.forks_count
         if repo.private:
             repo_name = "Private Repository"
         else:
@@ -44,20 +48,24 @@ def get_github_stats():
             print("Error occurred with code \"{}\" and message \"{}\" for repository \"{}\" "
                   "\n For more info visit {}".format(err.status, err.data["message"], repo_name,
                                                      err.data["documentation_url"]))
-    return total_commits
+    return total_commits, total_stargazers
 
 
 def get_os_stats():
     base_url = "https://archlinux.org/packages/search/json/?name={}"
     linux_zen_arch_package = base_url.format("linux-zen")
     plasma_desktop_arch_package = base_url.format("plasma-desktop")
+    zsh_arch_package = base_url.format("zsh")
     linux_zen_version = json.loads(
         (urllib.request.urlopen(urllib.request.Request(linux_zen_arch_package)).read()).decode("utf-8"))["results"][0][
         "pkgver"]
     plasma_desktop_version = json.loads(
         (urllib.request.urlopen(urllib.request.Request(plasma_desktop_arch_package)).read()).decode("utf-8"))[
         "results"][0]["pkgver"]
-    return plasma_desktop_version, linux_zen_version
+    zsh_version = json.loads(
+        (urllib.request.urlopen(urllib.request.Request(zsh_arch_package)).read()).decode("utf-8"))[
+        "results"][0]["pkgver"]
+    return plasma_desktop_version, linux_zen_version, zsh_version
 
 
 def update_github_readme(template_vars):
@@ -69,7 +77,9 @@ def update_github_readme(template_vars):
             file = profile_repo.get_contents("README.md")
             if content != file.decoded_content.decode():
                 profile_repo.update_file(path="README.md",
-                                         message="Automated Update for {} at {} {}".format(file.name, now.strftime("%c"),now.astimezone().tzinfo),
+                                         message="Automated Update for {} at {} {}".format(file.name,
+                                                                                           now.strftime("%c"),
+                                                                                           now.astimezone().tzinfo),
                                          content=content, sha=file.sha)
                 return "Successfully updated {}".format(file.name)
             else:
@@ -79,6 +89,7 @@ def update_github_readme(template_vars):
 
 
 if __name__ == "__main__":
-    variables["commits"] = get_github_stats()
-    variables["plasma_desktop_version"], variables["kernel_version"] = get_os_stats()
-    #print(update_github_readme(template_vars=variables))
+    variables["commits"], variables["total_stars_earned"] = get_github_stats()
+    variables["plasma_desktop_version"], variables["kernel_version"], variables["zsh_version"] = get_os_stats()
+    # print(variables)
+    print(update_github_readme(template_vars=variables))
