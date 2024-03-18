@@ -77,9 +77,7 @@ def update_github_readme(template_vars):
             file = profile_repo.get_contents("README.md")
             if content != file.decoded_content.decode():
                 profile_repo.update_file(path="README.md",
-                                         message="Automated Update for {} at {} {}".format(file.name,
-                                                                                           now.strftime("%c"),
-                                                                                           now.astimezone().tzinfo),
+                                         message="chore: update {}".format(file.name),
                                          content=content, sha=file.sha)
                 return "Successfully updated {}".format(file.name)
             else:
